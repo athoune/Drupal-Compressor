@@ -1,0 +1,121 @@
+<?php
+// $Id: javascript_aggregator.module,v 1.17.2.1 2008/11/26 23:54:27 robloach Exp $
+
+/**
+ * Implementation of hook_help().
+ */
+function compressor_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#javascript_aggregator':
+      $output = '<p>'. t('Uses the <a href="@jsmin">JSMin</a> library to minify the aggregated JavaScript file when <em>JavaScript optimization</em> has been enabled in the <a href="@performance">Performance settings</a>.', array('@performance' => url('admin/settings/performance'), '@jsmin' => 'http://code.google.com/p/jsmin-php/')) .'</p>';
+      return $output;
+  }
+}
+
+function compressor_menu(){
+	$items['admin/settings/compressor'] = array(
+		'description' => 'YUI compressor for all',
+		'title' => 'YUI COmpressor',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('compressor_admin_settings'),
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	return $items;
+}
+
+function compressor_admin_settings() {
+	$form['compressor_server'] = array(
+		'#type' => 'textfield',
+		'#title' => 'static site url',
+		'#default_value' => variable_get('compressor_server', ''),
+		'#description' => t('Specific server for static files'),
+	);
+	return system_settings_form($form);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function compressor_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'system_performance_settings') {
+    $form['bandwidth_optimizations']['preprocess_js']['#title'] = t('Optimize and YUI Compress JavaScript files');
+    $form['bandwidth_optimizations']['preprocess_css']['#title'] = t('Optimize and YUI Compress CSS files');
+    $form['bandwidth_optimizations']['minify_js']['#description'] .= t(' Once the JavaScript files have been aggregated, they will be minified.');
+  }
+}
+
+function _compressor_path($path) {
+  $server = variable_get('compressor_server', '');
+  if($server == '')
+    return $path;
+  return $server . $path;
+  return $path;
+}
+/**
+ * Implementation of hook_preprocess_hook().
+ *
+ <link type="text/css" rel="stylesheet" media="all" href="/drupal-ohmstudio/sites/default/files/css/2b2284a7444476a56d18cd14a849ec02.css" />
+<link type="text/css" rel="stylesheet" media="print" href="/drupal-ohmstudio/sites/default/files/css/3ec46b47dff2df88107946333ed3c904.css" />
+
+ * Minify the aggregated JavaScript file if JavaScript Optimization is turned on.
+ */
+function compressor_preprocess_page(&$variables) {
+  $compressor = dirname(__FILE__) . '/yuicompressor-2.4.2.jar';
+  $server = variable_get('compressor_server', '');
+// Only do this for pages that have CSS on them.
+  if (!empty($variables['styles'])) {
+    // Only process it is CSS Optimization is enabled.
+    if (variable_get('preprocess_css', 0)) {
+      // Strip out the aggregated JavaScript file.
+      $path = base_path() . file_directory_path();
+      $pattern = "|href=\"$path(.*)\"|mU";
+      preg_match_all($pattern, $variables['styles'], $matches);
+      $css = $variables['styles'];
+      foreach($matches[1] as $aggregated_file) {
+        $cssmin_file = $aggregated_file .'min.css';
+        $cssmin_file_path = file_directory_path() .$cssmin_file;
+
+        // Create the JSMinified file if it doesn't exist yet.
+        if (!file_exists($cssmin_file_path)) {
+          $css_file_path = file_directory_path() . $aggregated_file;
+          exec("java -jar $compressor --type=css -o $cssmin_file_path $css_file_path", $output);
+        }
+        if($server == '')
+          $css = str_replace($aggregated_file, $cssmin_file, $css);
+        else
+          $css = preg_replace("|href=\".*$aggregated_file\"|U", "href=\"$server$cssmin_file\"", $css);
+      }
+ 
+      // Replace the aggregated file with the minified JavaScript file.
+      $variables['styles'] = $css;
+    }
+  }
+
+  // Only do this for pages that have JavaScript on them.
+  if (!empty($variables['scripts'])) {
+    // Only process it is JavaScript Optimization is enabled.
+    if (variable_get('preprocess_js', 0)) {
+      // Strip out the aggregated JavaScript file.
+      $path = base_path() . file_directory_path();
+      $pattern = "!(<script type=\"text\/javascript\" src=\"$path)(.*?)(\"(.*?)><\/script>)!";
+      preg_match_all($pattern, $variables['scripts'], $matches);
+      $aggregated_file = $matches[2][0];
+      $jsmin_file = $aggregated_file .'min.js';
+      $jsmin_file_path = file_directory_path() .$jsmin_file;
+
+      // Create the JSMinified file if it doesn't exist yet.
+      if (!file_exists($jsmin_file_path)) {
+        $js_file_path = file_directory_path() . $aggregated_file;
+        exec("java -jar $compressor --type=js -o $jsmin_file_path $js_file_path", $output);
+        //var_dump($output);
+      }
+      
+      // Replace the aggregated file with the minified JavaScript file.
+      if($server == '')
+        $variables['scripts'] = str_replace($aggregated_file, $jsmin_file, $variables['scripts']);
+      else
+        $variables['scripts'] = preg_replace("|src=\".*$aggregated_file\"|U", "src=\"$server$jsmin_file\"", $variables['scripts']);
+    }
+  }
+}

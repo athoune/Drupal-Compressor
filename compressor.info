@@ -1,0 +1,4 @@
+name = Compressor
+description = YUI compressor for JS and CSS
+core = 6.x
+php = 5
