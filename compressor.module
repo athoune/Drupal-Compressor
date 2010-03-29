@@ -30,6 +30,7 @@ function compressor_form_alter(&$form, $form_state, $form_id) {
  */
 function compressor_preprocess_page(&$variables) {
   $compressor = dirname(__FILE__) . '/yuicompressor-2.4.2.jar';
+  global $user;
   // Only do this for pages that have CSS on them.
   if (!empty($variables['styles'])) {
     // Only process it is CSS Optimization is enabled.
@@ -54,11 +55,13 @@ function compressor_preprocess_page(&$variables) {
             drupal_set_message(t("<b>YuiCompressor crash</b> Check the CSS file and java disponibility. Don't forget to clear cache when you fix CSS. <pre>@crash</pre>",  array('@crash' => join("\n", $out))), 'error');
             watchdog('yuicompressor', 'yuicompressor can\'t do the job, maybe the css is invalid : '. $css_file_path, WATCHDOG_ERROR);
           } else {
-            drupal_set_message(t('CSS compression of @file : @score %',
-              array(
-                '@file' => $css_file_path,
-                '@score' => round( 100 * filesize($cssmin_file_path) / filesize($css_file_path))))
-                , 'status');
+            if($user->uid == 1) {
+              drupal_set_message(t('CSS compression of @file : @score %',
+                array(
+                  '@file' => $css_file_path,
+                  '@score' => round( 100 * filesize($cssmin_file_path) / filesize($css_file_path))))
+                  , 'status');
+            }
           }
         }
       }
@@ -88,11 +91,13 @@ function compressor_preprocess_page(&$variables) {
           drupal_set_message(t("<b>YuiCompressor crash</b> Check the JS file and java disponibility. Don't forget to clear cache when you fix CSS. <pre>@crash</pre>",  array('@crash' => join("\n", $out))), 'error');
           watchdog('yuicompressor', 'yuicompressor can\'t do the job, maybe the js is invalid : '. $js_file_path, WATCHDOG_ERROR);
         } else {
-          drupal_set_message(t('JS compression of @file : @score %',
-            array(
-              '@file' => $css_file_path,
-              '@score' => round( 100 * filesize($jsmin_file_path) / filesize($js_file_path))))
-              , 'status');
+          if($user->uid == 1) {
+            drupal_set_message(t('JS compression of @file : @score %',
+              array(
+                '@file' => $css_file_path,
+                '@score' => round( 100 * filesize($jsmin_file_path) / filesize($js_file_path))))
+                , 'status');
+          }
         }
       }
       
