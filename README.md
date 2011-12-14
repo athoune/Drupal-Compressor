@@ -1,8 +1,11 @@
 YUI-compressor meets Drupal
 
 
-Installation
+*** Installation
+
+
 1-  go to your sites/all/modules/
+
 2-  clone repository
 
        git clone https://github.com/athoune/Drupal-Compressor compressor
