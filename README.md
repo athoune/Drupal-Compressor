@@ -25,7 +25,7 @@ Installation
 
 6.  __enable the CSS and JS compression into admin/settings/performance__
 
-and be sure that your version of yuicompressor-X.Y.Z.jar is the same the path
+and be sure that your version of yuicompressor-X.Y.Z.jar is on the same the path
 
 
 Contribution
