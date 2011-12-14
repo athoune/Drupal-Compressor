@@ -13,18 +13,15 @@ Installation
 
 3.  __download the latest  YUI compressor__
 
-get yuicompressor-X.Y.Z.jar from its website and put into  sites/all/modules/compressor
+		get yuicompressor-X.Y.Z.jar from its website and put into  sites/all/modules/compressor
 
-http://developer.yahoo.com/yui/compressor/
+		http://developer.yahoo.com/yui/compressor/
 
-into  admin/settings/file-system
+4.   into  admin/settings/file-system
 
-4.  __enable radio button Public and__
+	__enable radio button Public and sites/default/files  must be writable__
 
-sites/default/files  must be with writable
-
-
-5.  __enable 'compressor' in admin/build/modules/list __
+5.  __enable 'compressor' in admin/build/modules/list__
 
 6.  __enable the CSS and JS compression into admin/settings/performance__
 
