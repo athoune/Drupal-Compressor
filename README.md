@@ -1,8 +1,6 @@
 YUI-compressor meets Drupal
 
 
-
-
 Installation
 1-  go to your sites/all/modules/
 2-  clone repository
@@ -31,7 +29,9 @@ sites/default/files  must be with writable
 and be sure that your version of yuicompressor-X.Y.Z.jar is the same the path
 
 
-
+Contribution
+1- athoune
+2- liuggio
 
 
 
