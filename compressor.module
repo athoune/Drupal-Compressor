@@ -12,13 +12,26 @@ function compressor_help($path, $arg) {
   }
 }
 
+
+function getYuiCompressorPath()
+{
+  $path = dirname(__FILE__) . '/yuicompressor-2.4.7.jar';
+  return variable_get('yuicompressorpath', $path);
+}
 /**
  * Implementation of hook_form_alter().
  */
 function compressor_form_alter(&$form, $form_state, $form_id) {
+  
   if ($form_id == 'system_performance_settings') {
     $form['bandwidth_optimizations']['preprocess_js']['#title'] = t('Optimize and YUI Compress JavaScript files');
     $form['bandwidth_optimizations']['preprocess_css']['#title'] = t('Optimize and YUI Compress CSS files');
+    $form['bandwidth_optimizations']['yuicompressorpath'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Path to the yiu-compressor. <br>Download it into ' . $path . ''),
+      '#default_value' => getYuiCompressorPath(), 
+      '#size' => 120, 
+      );
     $form['bandwidth_optimizations']['minify_js']['#description'] .= t(' Once the JavaScript files have been aggregated, they will be minified.');
   }
 }
@@ -29,10 +42,12 @@ function compressor_form_alter(&$form, $form_state, $form_id) {
  * Minify the aggregated JavaScript file if JavaScript Optimization is turned on.
  */
 function compressor_preprocess_page(&$variables) {
-  $compressor = dirname(__FILE__) . '/yuicompressor-2.4.2.jar';
+  $compressor = getYuiCompressorPath();
   global $user;
+   
   // Only do this for pages that have CSS on them.
   if (!empty($variables['styles'])) {
+  
     // Only process it is CSS Optimization is enabled.
     if (variable_get('preprocess_css', 0)) {
       // Strip out the aggregated JavaScript file.
@@ -44,6 +59,7 @@ function compressor_preprocess_page(&$variables) {
       if(substr($dir_file,0,1) != '/') {
         $dir_file = getcwd() .'/'. $dir_file;
       }
+
       foreach($matches[1] as $aggregated_file) {
         $css_file_path = file_directory_path() . $aggregated_file;
         $cssmin_file_path = str_replace('.css', '.min.css', $css_file_path);
